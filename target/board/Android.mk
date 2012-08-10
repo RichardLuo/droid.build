@@ -20,6 +20,9 @@ else
   INSTALLED_KERNEL_TARGET :=
 endif
 
+# Use the add-radio-file function to add values to this variable.
+INSTALLED_RADIOIMAGE_TARGET :=
+
 -include $(TARGET_DEVICE_DIR)/AndroidBoard.mk
 
 # Generate a file that contains various information about the
@@ -27,14 +30,10 @@ endif
 # with everything else.
 #
 # If the file "board-info.txt" appears in $(TARGET_DEVICE_DIR),
-# it will be used; otherwise TARGET_BOARD_INFO_FILE is used, which
-# can be set in BoardConfig.mk.
+# it will be appended to the output file.
 #
 INSTALLED_ANDROID_INFO_TXT_TARGET := $(PRODUCT_OUT)/android-info.txt
 board_info_txt := $(wildcard $(TARGET_DEVICE_DIR)/board-info.txt)
-ifndef board_info_txt
-board_info_txt := $(TARGET_BOARD_INFO_FILE)
-endif
 $(INSTALLED_ANDROID_INFO_TXT_TARGET): $(board_info_txt)
 	$(call pretty,"Generated: ($@)")
 ifdef board_info_txt

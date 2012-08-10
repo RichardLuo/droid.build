@@ -48,10 +48,7 @@ pathmap_INCL := \
     libthread_db:bionic/libthread_db/include \
     mkbootimg:system/core/mkbootimg \
     recovery:bootable/recovery \
-    system-core:system/core/include \
-    wilhelm:system/media/wilhelm/include \
-    wilhelm-ut:system/media/wilhelm/src/ut \
-    speex:external/speex/include
+    system-core:system/core/include
 
 #
 # Returns the path to the requested module's include directory,
@@ -85,13 +82,12 @@ FRAMEWORKS_BASE_SUBDIRS := \
 	    graphics \
 	    location \
 	    media \
-	    drm \
 	    opengl \
 	    sax \
 	    telephony \
 	    wifi \
+	    vpn \
 	    keystore \
-	    icu4j \
 	    voip \
 	 )
 
@@ -103,17 +99,3 @@ FRAMEWORKS_BASE_SUBDIRS := \
 #
 FRAMEWORKS_BASE_JAVA_SRC_DIRS := \
 	$(addprefix frameworks/base/,$(FRAMEWORKS_BASE_SUBDIRS))
-
-#
-# A list of all source roots under frameworks/support.
-#
-FRAMEWORKS_SUPPORT_SUBDIRS := \
-	v4 \
-	v13 \
-
-#
-# A version of FRAMEWORKS_SUPPORT_SUBDIRS that is expanded to full paths from
-# the root of the tree.
-#
-FRAMEWORKS_SUPPORT_JAVA_SRC_DIRS := \
-	$(addprefix frameworks/support/,$(FRAMEWORKS_SUPPORT_SUBDIRS))

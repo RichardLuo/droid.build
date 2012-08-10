@@ -28,14 +28,6 @@ TARGET_CXX := $(TARGET_TOOLS_PREFIX)c++$(HOST_EXECUTABLE_SUFFIX)
 TARGET_AR := $(TARGET_TOOLS_PREFIX)ar$(HOST_EXECUTABLE_SUFFIX)
 TARGET_OBJCOPY := $(TARGET_TOOLS_PREFIX)objcopy$(HOST_EXECUTABLE_SUFFIX)
 TARGET_LD := $(TARGET_TOOLS_PREFIX)ld$(HOST_EXECUTABLE_SUFFIX)
-TARGET_STRIP := $(TARGET_TOOLS_PREFIX)strip$(HOST_EXECUTABLE_SUFFIX)
-
-ifeq ($(TARGET_BUILD_VARIANT),user)
-TARGET_STRIP_COMMAND = $(TARGET_STRIP) --strip-debug $< -o $@
-else
-TARGET_STRIP_COMMAND = $(TARGET_STRIP) --strip-debug $< -o $@ && \
-	$(TARGET_OBJCOPY) --add-gnu-debuglink=$< $@
-endif
 
 TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
 
@@ -105,45 +97,42 @@ TARGET_C_INCLUDES := \
 	$(libstdc++_root)/include \
 	$(KERNEL_HEADERS) \
 	$(libm_root)/include \
-	$(libm_root)/include/sh \
+	$(libm_root)/include/arch/sh \
 	$(libthread_db_root)/include
 
 TARGET_CRTBEGIN_STATIC_O := $(TARGET_OUT_STATIC_LIBRARIES)/crtbegin_static.o
 TARGET_CRTBEGIN_DYNAMIC_O := $(TARGET_OUT_STATIC_LIBRARIES)/crtbegin_dynamic.o
 TARGET_CRTEND_O := $(TARGET_OUT_STATIC_LIBRARIES)/crtend_android.o
-
 TARGET_CRTBEGIN_SO_O := $(TARGET_OUT_STATIC_LIBRARIES)/sobegin.o
 TARGET_CRTEND_SO_O := $(TARGET_OUT_STATIC_LIBRARIES)/soend.o
 
-TARGET_STRIP_MODULE:=true
+TARGET_STRIP_MODULE:=false
 
 TARGET_DEFAULT_SYSTEM_SHARED_LIBRARIES := libc libstdc++ libm
 
 TARGET_CUSTOM_LD_COMMAND := true
 define transform-o-to-shared-lib-inner
-$(hide) $(PRIVATE_CXX) \
+$(TARGET_CXX) \
 	-nostdlib -Wl,-soname,$(notdir $@) -Wl,-T,$(BUILD_SYSTEM)/shlelf.xsc \
 	-Wl,--gc-sections -Wl,-z,norelro \
 	-Wl,-shared,-Bsymbolic \
 	$(PRIVATE_TARGET_GLOBAL_LD_DIRS) \
-	$(if $(filter true,$(PRIVATE_NO_CRT)),,$(PRIVATE_TARGET_CRTBEGIN_SO_O)) \
+	$(PRIVATE_TARGET_CRTBEGIN_SO_O) \
 	$(PRIVATE_ALL_OBJECTS) \
 	-Wl,--whole-archive \
-	$(call normalize-target-libraries,$(PRIVATE_ALL_WHOLE_STATIC_LIBRARIES)) \
+	$(call normalize-host-libraries,$(PRIVATE_ALL_WHOLE_STATIC_LIBRARIES)) \
 	-Wl,--no-whole-archive \
-	$(if $(PRIVATE_GROUP_STATIC_LIBRARIES),-Wl$(comma)--start-group) \
 	$(call normalize-target-libraries,$(PRIVATE_ALL_STATIC_LIBRARIES)) \
-	$(if $(PRIVATE_GROUP_STATIC_LIBRARIES),-Wl$(comma)--end-group) \
 	$(call normalize-target-libraries,$(PRIVATE_ALL_SHARED_LIBRARIES)) \
 	-o $@ \
 	$(PRIVATE_LDFLAGS) \
 	$(subst -lrt,, $(subst -lpthread,,$(PRIVATE_LDLIBS))) \
 	$(PRIVATE_TARGET_LIBGCC) \
-	$(if $(filter true,$(PRIVATE_NO_CRT)),,$(PRIVATE_TARGET_CRTEND_SO_O))
+	$(PRIVATE_TARGET_CRTEND_SO_O)
 endef
 
 define transform-o-to-executable-inner
-$(hide) $(PRIVATE_CXX) -nostdlib -Bdynamic  -Wl,-T,$(BUILD_SYSTEM)/shlelf.x \
+$(TARGET_CXX) -nostdlib -Bdynamic  -Wl,-T,$(BUILD_SYSTEM)/shlelf.x \
 	-Wl,-dynamic-linker,/system/bin/linker \
 	-Wl,--gc-sections -Wl,-z,norelro \
 	-Wl,-z,nocopyreloc \
@@ -151,29 +140,25 @@ $(hide) $(PRIVATE_CXX) -nostdlib -Bdynamic  -Wl,-T,$(BUILD_SYSTEM)/shlelf.x \
 	$(TARGET_GLOBAL_LD_DIRS) \
 	-Wl,-rpath-link=$(TARGET_OUT_INTERMEDIATE_LIBRARIES) \
 	$(call normalize-target-libraries,$(PRIVATE_ALL_SHARED_LIBRARIES)) \
-	$(if $(filter true,$(PRIVATE_NO_CRT)),,$(TARGET_CRTBEGIN_DYNAMIC_O)) \
+	$(TARGET_CRTBEGIN_DYNAMIC_O) \
 	$(PRIVATE_ALL_OBJECTS) \
-	$(if $(PRIVATE_GROUP_STATIC_LIBRARIES),-Wl$(comma)--start-group) \
 	$(call normalize-target-libraries,$(PRIVATE_ALL_STATIC_LIBRARIES)) \
-	$(if $(PRIVATE_GROUP_STATIC_LIBRARIES),-Wl$(comma)--end-group) \
 	$(PRIVATE_LDFLAGS) \
 	$(TARGET_LIBGCC) \
 	$(subst -lrt,, $(subst -lpthread,,$(PRIVATE_LDLIBS))) \
-	$(if $(filter true,$(PRIVATE_NO_CRT)),,$(TARGET_CRTEND_O))
+	$(TARGET_CRTEND_O)
 endef
 
 define transform-o-to-static-executable-inner
-$(hide) $(PRIVATE_CXX) -nostdlib -Bstatic  -Wl,-T,$(BUILD_SYSTEM)/shlelf.x \
+$(TARGET_CXX) -nostdlib -Bstatic  -Wl,-T,$(BUILD_SYSTEM)/shlelf.x \
 	-Wl,--gc-sections -Wl,-z,norelro \
 	-o $@ \
 	$(TARGET_GLOBAL_LD_DIRS) \
-	$(if $(filter true,$(PRIVATE_NO_CRT)),,$(TARGET_CRTBEGIN_STATIC_O)) \
+	$(TARGET_CRTBEGIN_STATIC_O) \
 	$(PRIVATE_LDFLAGS) \
 	$(PRIVATE_ALL_OBJECTS) \
-	-Wl,--start-group \
 	$(call normalize-target-libraries,$(PRIVATE_ALL_STATIC_LIBRARIES)) \
-	-Wl,--end-group \
 	$(TARGET_LIBGCC) \
 	$(subst -lrt,, $(subst -lpthread,,$(PRIVATE_LDLIBS))) \
-	$(if $(filter true,$(PRIVATE_NO_CRT)),,$(TARGET_CRTEND_O))
+	$(TARGET_CRTEND_O)
 endef

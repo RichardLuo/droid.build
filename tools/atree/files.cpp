@@ -62,7 +62,7 @@ void
 split_line(const char* p, vector<string>* out)
 {
     const char* q = p;
-    enum { WHITE, TEXT, IN_QUOTE } state = WHITE;
+    enum { WHITE, TEXT } state = WHITE;
     while (*p) {
         if (*p == '#') {
             break;
@@ -73,25 +73,13 @@ split_line(const char* p, vector<string>* out)
             case WHITE:
                 if (!isspace(*p)) {
                     q = p;
-                    state = (*p == '"') ? IN_QUOTE : TEXT;
+                    state = TEXT;
                 }
                 break;
-            case IN_QUOTE:
-                if (*p == '"') {
-                    state = TEXT;
-                    break;
-                }
-                // otherwise fall-through to TEXT case
             case TEXT:
-                if (state != IN_QUOTE && isspace(*p)) {
+                if (isspace(*p)) {
                     if (q != p) {
-                        const char* start = q;
-                        size_t len = p-q;
-                        if (len > 2 && *start == '"' && start[len - 1] == '"') {
-                            start++;
-                            len -= 2;
-                        }
-                        out->push_back(string(start, len));
+                        out->push_back(string(q, p-q));
                     }
                     state = WHITE;
                 }
@@ -100,25 +88,17 @@ split_line(const char* p, vector<string>* out)
         p++;
     }
     if (state == TEXT) {
-        const char* start = q;
-        size_t len = p-q;
-        if (len > 2 && *start == '"' && start[len - 1] == '"') {
-            start++;
-            len -= 2;
-        }
-        out->push_back(string(start, len));
+        out->push_back(string(q, p-q));
     }
 }
 
 static void
-add_file(vector<FileRecord>* files, const FileOpType fileOp,
-            const string& listFile, int listLine,
+add_file(vector<FileRecord>* files, const string& listFile, int listLine,
             const string& sourceName, const string& outName)
 {
     FileRecord rec;
     rec.listFile = listFile;
     rec.listLine = listLine;
-    rec.fileOp = fileOp;
     rec.sourceName = sourceName;
     rec.outName = outName;
     files->push_back(rec);
@@ -202,7 +182,7 @@ read_list_file(const string& filename,
         err = errno;
         goto cleanup;
     }
-
+    
     size = ftell(f);
 
     err = fseek(f, 0, SEEK_SET);
@@ -265,52 +245,35 @@ read_list_file(const string& filename,
             }
             printf("]\n");
 #endif
-            FileOpType op = FILE_OP_COPY;
-            string paths[2];
-            int pcount = 0;
-            string errstr;
-            for (vector<string>::iterator it = words.begin(); it != words.end(); ++it) {
-                const string& word = *it;
-                if (word == "rm") {
-                    if (op != FILE_OP_COPY) {
-                        errstr = "Error: you can only specifiy 'rm' or 'strip' once per line.";
-                        break;
-                    }
-                    op = FILE_OP_REMOVE;
-                } else if (word == "strip") {
-                    if (op != FILE_OP_COPY) {
-                        errstr = "Error: you can only specifiy 'rm' or 'strip' once per line.";
-                        break;
-                    }
-                    op = FILE_OP_STRIP;
-                } else if (pcount < 2) {
-                    bool error = false;
-                    paths[pcount++] = replace_variables(word, variables, &error);
-                    if (error) {
-                        err = 1;
-                        goto cleanup;
-                    }
-                } else {
-                    errstr = "Error: More than 2 paths per line.";
-                    break;
+            
+            if (words.size() == 1) {
+                // pattern: DEST
+                bool error = false;
+                string w0 = replace_variables(words[0], variables, &error);
+                if (error) {
+                    err = 1;
+                    goto cleanup;
                 }
+                add_file(files, filename, i+1, w0, w0);
             }
-
-            if (pcount == 0 && !errstr.empty()) {
-                errstr = "Error: No path found on line.";
+            else if (words.size() == 2) {
+                // pattern: SRC DEST
+                bool error = false;
+                string w0, w1;
+                w0 = replace_variables(words[0], variables, &error);
+                if (!error) {
+                    w1 = replace_variables(words[1], variables, &error);
+                }
+                if (error) {
+                    err = 1;
+                    goto cleanup;
+                }
+                add_file(files, filename, i+1, w0, w1);
             }
-
-            if (!errstr.empty()) {
-                fprintf(stderr, "%s:%d: bad format: %s\n%s\nExpected: [SRC] [rm|strip] DEST\n",
-                        filename.c_str(), i+1, p, errstr.c_str());
+            else {
+                fprintf(stderr, "%s:%d: bad format: %s\n", filename.c_str(),
+                        i+1, p);
                 err = 1;
-            } else {
-                if (pcount == 1) {
-                    // pattern: [rm|strip] DEST
-                    paths[1] = paths[0];
-                }
-
-                add_file(files, op, filename, i+1, paths[0], paths[1]);
             }
         }
         p = q;
@@ -330,14 +293,6 @@ cleanup:
 int
 locate(FileRecord* rec, const vector<string>& search)
 {
-    if (rec->fileOp == FILE_OP_REMOVE) {
-        // Don't touch source files when removing a destination.
-        rec->sourceMod = 0;
-        rec->sourceSize = 0;
-        rec->sourceIsDir = false;
-        return 0;
-    }
-
     int err;
 
     for (vector<string>::const_iterator it=search.begin();
@@ -349,7 +304,6 @@ locate(FileRecord* rec, const vector<string>& search)
             rec->sourceBase = *it;
             rec->sourcePath = full;
             rec->sourceMod = st.st_mtime;
-            rec->sourceSize = st.st_size;
             rec->sourceIsDir = S_ISDIR(st.st_mode);
             return 0;
         }
@@ -370,11 +324,9 @@ stat_out(const string& base, FileRecord* rec)
     err = stat(rec->outPath.c_str(), &st);
     if (err == 0) {
         rec->outMod = st.st_mtime;
-        rec->outSize = st.st_size;
         rec->outIsDir = S_ISDIR(st.st_mode);
     } else {
         rec->outMod = 0;
-        rec->outSize = 0;
         rec->outIsDir = false;
     }
 }
@@ -475,8 +427,3 @@ list_dir(const FileRecord& rec, const vector<string>& excludes,
 {
     return list_dir("", rec, excludes, files);
 }
-
-FileRecord::FileRecord() {
-    fileOp = FILE_OP_COPY;
-}
-

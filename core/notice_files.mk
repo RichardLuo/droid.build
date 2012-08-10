@@ -2,9 +2,9 @@
 ## Track NOTICE files
 ###########################################################
 
-notice_file:=$(strip $(wildcard $(LOCAL_PATH)/NOTICE))
+notice_file:=$(shell find $(LOCAL_PATH) -maxdepth 1 -name NOTICE)
 
-ifdef notice_file
+ifneq ($(strip $(notice_file)),)
 
 # This relies on the name of the directory in PRODUCT_OUT matching where
 # it's installed on the target - i.e. system, data, etc.  This does

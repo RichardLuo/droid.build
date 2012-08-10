@@ -117,13 +117,13 @@ else
   building_sdk :=
 endif
 
-# A change in the list of aapt configs warrants an installclean, too.
-aapt_config_list := $(strip $(PRODUCT_AAPT_CONFIG) $(PRODUCT_AAPT_PREF_CONFIG))
+# A change in the list of locales warrants an installclean, too.
+locale_list := $(subst $(space),$(comma),$(strip $(PRODUCT_LOCALES)))
 
 current_build_config := \
-    $(TARGET_PRODUCT)-$(TARGET_BUILD_VARIANT)$(building_sdk)-{$(aapt_config_list)}
+    $(TARGET_PRODUCT)-$(TARGET_BUILD_VARIANT)$(building_sdk)-{$(locale_list)}
 building_sdk :=
-aapt_config_list :=
+locale_list :=
 force_installclean := false
 
 # Read the current state from the file, if present.
@@ -186,8 +186,7 @@ installclean_files := \
 	$(PRODUCT_OUT)/root \
 	$(PRODUCT_OUT)/system \
 	$(PRODUCT_OUT)/dex_bootjars \
-	$(PRODUCT_OUT)/obj/JAVA_LIBRARIES \
-	$(PRODUCT_OUT)/obj/FAKE
+	$(PRODUCT_OUT)/obj/JAVA_LIBRARIES
 
 # The files/dirs to delete during a dataclean, which removes any files
 # in the staging and emulator data partitions.

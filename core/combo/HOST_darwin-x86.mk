@@ -42,48 +42,29 @@ endif # build_mac_version is 10.6
 HOST_GLOBAL_CFLAGS += -fPIC
 HOST_NO_UNDEFINED_LDFLAGS := -Wl,-undefined,error
 
-GCC_REALPATH = $(realpath $(shell which gcc))
-ifneq ($(findstring llvm-gcc,$(GCC_REALPATH)),)
-    # Using LLVM GCC results in a non functional emulator due to it
-    # not honouring global register variables
-    $(warning ****************************************)
-    $(warning * gcc is linked to llvm-gcc which will *)
-    $(warning * not create a useable emulator.       *)
-    $(warning ****************************************)
-endif
-
-HOST_CC := gcc
-HOST_CXX := g++
+HOST_CC := $(CC)
+HOST_CXX := $(CXX)
 HOST_AR := $(AR)
-HOST_STRIP := $(STRIP)
-HOST_STRIP_COMMAND = $(HOST_STRIP) --strip-debug $< -o $@
 
 HOST_SHLIB_SUFFIX := .dylib
 HOST_JNILIB_SUFFIX := .jnilib
 
 HOST_GLOBAL_CFLAGS += \
 	-include $(call select-android-config-h,darwin-x86)
-ifneq ($(filter 10.7.%, $(build_mac_version)),)
-       HOST_RUN_RANLIB_AFTER_COPYING := false
-else
-       HOST_RUN_RANLIB_AFTER_COPYING := true
-       PRE_LION_DYNAMIC_LINKER_OPTIONS := -Wl,-dynamic
-endif
+HOST_RUN_RANLIB_AFTER_COPYING := true
 HOST_GLOBAL_ARFLAGS := cqs
 
 HOST_CUSTOM_LD_COMMAND := true
 
 define transform-host-o-to-shared-lib-inner
-$(hide) $(PRIVATE_CXX) \
+    $(HOST_CXX) \
         -dynamiclib -single_module -read_only_relocs suppress \
         $(HOST_GLOBAL_LD_DIRS) \
         $(HOST_GLOBAL_LDFLAGS) \
         $(PRIVATE_ALL_OBJECTS) \
-        $(call normalize-host-libraries,$(PRIVATE_ALL_SHARED_LIBRARIES)) \
-        $(call normalize-host-libraries,$(PRIVATE_ALL_WHOLE_STATIC_LIBRARIES)) \
-        $(if $(PRIVATE_GROUP_STATIC_LIBRARIES),-Wl$(comma)--start-group) \
-        $(call normalize-host-libraries,$(PRIVATE_ALL_STATIC_LIBRARIES)) \
-        $(if $(PRIVATE_GROUP_STATIC_LIBRARIES),-Wl$(comma)--end-group) \
+        $(call normalize-target-libraries,$(PRIVATE_ALL_SHARED_LIBRARIES)) \
+        $(call normalize-target-libraries,$(PRIVATE_ALL_WHOLE_STATIC_LIBRARIES)) \
+        $(call normalize-target-libraries,$(PRIVATE_ALL_STATIC_LIBRARIES)) \
         $(PRIVATE_LDLIBS) \
         -o $@ \
         $(PRIVATE_LDFLAGS) \
@@ -91,17 +72,15 @@ $(hide) $(PRIVATE_CXX) \
 endef
 
 define transform-host-o-to-executable-inner
-$(hide) $(PRIVATE_CXX) \
+$(HOST_CXX) \
         -o $@ \
-        $(PRE_LION_DYNAMIC_LINKER_OPTIONS) -headerpad_max_install_names \
+        -Wl,-dynamic -headerpad_max_install_names \
         $(HOST_GLOBAL_LD_DIRS) \
         $(HOST_GLOBAL_LDFLAGS) \
-        $(call normalize-host-libraries,$(PRIVATE_ALL_SHARED_LIBRARIES)) \
+        $(call normalize-target-libraries,$(PRIVATE_ALL_SHARED_LIBRARIES)) \
         $(PRIVATE_ALL_OBJECTS) \
-        $(call normalize-host-libraries,$(PRIVATE_ALL_WHOLE_STATIC_LIBRARIES)) \
-        $(if $(PRIVATE_GROUP_STATIC_LIBRARIES),-Wl$(comma)--start-group) \
-        $(call normalize-host-libraries,$(PRIVATE_ALL_STATIC_LIBRARIES)) \
-        $(if $(PRIVATE_GROUP_STATIC_LIBRARIES),-Wl$(comma)--end-group) \
+        $(call normalize-target-libraries,$(PRIVATE_ALL_WHOLE_STATIC_LIBRARIES)) \
+        $(call normalize-target-libraries,$(PRIVATE_ALL_STATIC_LIBRARIES)) \
         $(PRIVATE_LDFLAGS) \
         $(PRIVATE_LDLIBS) \
         $(HOST_LIBGCC)
