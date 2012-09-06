@@ -78,7 +78,8 @@ BUILD_KEY_CHAR_MAP := $(BUILD_SYSTEM)/key_char_map.mk
 # The 'showcommands' goal says to show the full command
 # lines being executed, instead of a short message about
 # the kind of operation being done.
-SHOW_COMMANDS:= $(filter showcommands,$(MAKECMDGOALS))
+# SHOW_COMMANDS:= $(filter showcommands,$(MAKECMDGOALS))
+SHOW_COMMANDS := showcommands
 
 
 # ###############################################################
