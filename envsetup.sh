@@ -634,8 +634,7 @@ function mm()
     # If we're sitting in the root of the build tree, just do a
     # normal make.
     if [ -f build/core/envsetup.mk -a -f Makefile ]; then
-        echo "HHHHHHHHHHHHHHHH: $@"
-        make -d $@
+        make $@
     else
         # Find the closest Android.mk file.
         T=$(gettop)
