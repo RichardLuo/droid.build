@@ -87,8 +87,10 @@ SHOW_COMMANDS := showcommands
 # ###############################################################
 
 # These can be changed to modify both host and device modules.
-COMMON_GLOBAL_CFLAGS:= -DANDROID -fmessage-length=0 -W -Wall -Wno-unused -Winit-self -Wpointer-arith
-COMMON_RELEASE_CFLAGS:= -DNDEBUG -UDEBUG
+COMMON_GLOBAL_CFLAGS := -DANDROID -D__ANDROID__ -fmessage-length=0 -W -Wall -Wno-unused -Winit-self -Wpointer-arith
+COMMON_GLOBAL_CFLAGS += -DANDROID_PLATFORM
+
+COMMON_RELEASE_CFLAGS:= 
 
 COMMON_GLOBAL_CPPFLAGS:= $(COMMON_GLOBAL_CFLAGS) -Wsign-promo
 COMMON_RELEASE_CPPFLAGS:= $(COMMON_RELEASE_CFLAGS)

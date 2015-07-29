@@ -27,6 +27,8 @@
 # A mapping from shorthand names to include directories.
 #
 pathmap_INCL := \
+	x-live:frameworks/X-Live \
+	libjingle:external/libjingle \
     bluedroid:system/bluetooth/bluedroid/include \
     bluez:external/bluetooth/bluez \
     glib:external/bluetooth/glib \
@@ -58,6 +60,10 @@ pathmap_INCL := \
 # $(1): a list of modules (or other named entities) to find the includes for
 #
 define include-path-for
+$(foreach n,$(1),$(patsubst $(n):%,%,$(filter $(n):%,$(pathmap_INCL))))
+endef
+
+define get-mod-path
 $(foreach n,$(1),$(patsubst $(n):%,%,$(filter $(n):%,$(pathmap_INCL))))
 endef
 
