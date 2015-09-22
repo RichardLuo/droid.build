@@ -48,6 +48,8 @@ pathmap_INCL := \
     libthread_db:bionic/libthread_db/include \
     mkbootimg:system/core/mkbootimg \
     recovery:bootable/recovery \
+    x-live:frameworks/X-Live \
+    libjingle:external/libjingle \
     system-core:system/core/include
 
 #
@@ -58,6 +60,10 @@ pathmap_INCL := \
 # $(1): a list of modules (or other named entities) to find the includes for
 #
 define include-path-for
+$(foreach n,$(1),$(patsubst $(n):%,%,$(filter $(n):%,$(pathmap_INCL))))
+endef
+
+define get-mod-path
 $(foreach n,$(1),$(patsubst $(n):%,%,$(filter $(n):%,$(pathmap_INCL))))
 endef
 
