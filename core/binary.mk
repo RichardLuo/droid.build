@@ -47,6 +47,13 @@ ifeq ($(strip $(LOCAL_NO_FDO_SUPPORT)),)
   LOCAL_LDFLAGS += $(TARGET_FDO_CFLAGS)
 endif
 
+ifeq ($(strip $(LOCAL_CXX11_DISABLED)),)
+  LOCAL_CPPFLAGS += -std=c++11
+else
+  $(info $(LOCAL_MODULE) disabled c++11)
+endif
+
+
 ###########################################################
 ## Define PRIVATE_ variables from global vars
 ###########################################################
