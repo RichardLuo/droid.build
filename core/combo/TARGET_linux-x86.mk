@@ -22,8 +22,8 @@ ifeq ($(TARGET_SIMULATOR),true)
 TARGET_CC := $(HOST_CC)
 TARGET_CXX := $(HOST_CXX)
 TARGET_AR := $(HOST_AR)
-TARGET_GLOBAL_CFLAGS := $(HOST_GLOBAL_CFLAGS) -m32
-TARGET_GLOBAL_LDFLAGS := $(HOST_GLOBAL_LDFLAGS) -m32 -lpthread
+TARGET_GLOBAL_CFLAGS := $(HOST_GLOBAL_CFLAGS)
+TARGET_GLOBAL_LDFLAGS := $(HOST_GLOBAL_LDFLAGS) -lpthread
 TARGET_NO_UNDEFINED_LDFLAGS := $(HOST_NO_UNDEFINED_LDFLAGS)
 TARGET_ARCH_VARIANT := x86
 else #simulator
@@ -47,8 +47,8 @@ TARGET_LD := $(TARGET_TOOLS_PREFIX)ld$(HOST_EXECUTABLE_SUFFIX)
 
 ifneq ($(wildcard $(TARGET_CC)),)
 TARGET_LIBGCC := \
-	$(shell $(TARGET_CC) -m32 -print-file-name=libgcc.a) \
-        $(shell $(TARGET_CC) -m32 -print-file-name=libgcc_eh.a)
+	$(shell $(TARGET_CC) -print-file-name=libgcc.a) \
+        $(shell $(TARGET_CC) -print-file-name=libgcc_eh.a)
 endif
 
 TARGET_NO_UNDEFINED_LDFLAGS := -Wl,--no-undefined
@@ -73,7 +73,6 @@ KERNEL_HEADERS := $(KERNEL_HEADERS_COMMON) $(KERNEL_HEADERS_ARCH)
 
 TARGET_GLOBAL_CFLAGS += \
 			-march=i686 \
-			-m32 \
 			-fPIC \
 			-include $(call select-android-config-h,target_linux-x86)
 
@@ -156,8 +155,5 @@ $(TARGET_CXX) \
 	-Wl,--end-group \
 	$(TARGET_CRTEND_O)
 endef
-
-TARGET_GLOBAL_CFLAGS += -m32
-TARGET_GLOBAL_LDFLAGS += -m32
 
 endif #simulator

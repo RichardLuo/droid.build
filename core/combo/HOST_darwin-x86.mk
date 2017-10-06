@@ -20,8 +20,6 @@
 # We build everything in 32-bit, because some host tools are
 # 32-bit-only anyway (emulator, acc), and because it gives us
 # more consistency between the host tools and the target.
-HOST_GLOBAL_CFLAGS += -m32
-HOST_GLOBAL_LDFLAGS += -m32
 
 # Use the Mac OSX SDK 10.5 if the build host is 10.6
 build_mac_version := $(shell sw_vers -productVersion)
