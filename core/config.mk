@@ -25,14 +25,11 @@ SRC_DOCS:= $(TOPDIR)docs
 # TODO: See if we can remove most of these from the global list.
 SRC_HEADERS := \
 	$(TOPDIR)system/core/include \
-	$(TOPDIR)hardware/libhardware/include \
-	$(TOPDIR)hardware/libhardware_legacy/include \
-	$(TOPDIR)hardware/ril/include \
-	$(TOPDIR)dalvik/libnativehelper/include \
 	$(TOPDIR)frameworks/base/include \
-	$(TOPDIR)frameworks/base/opengl/include \
     $(TOPDIR)frameworks/base/native/include \
-	$(TOPDIR)external/skia/include
+	$(TOPDIR)dalvik/libnativehelper/include \
+	$(TOPDIR)bionic/libc/kernel/common \
+
 SRC_HOST_HEADERS:=$(TOPDIR)tools/include
 SRC_LIBRARIES:= $(TOPDIR)libs
 SRC_SERVERS:= $(TOPDIR)servers
