@@ -172,13 +172,6 @@ $(proto_generated_objects): $(proto_generated_cc_sources_dir)/%.o: $(proto_gener
 	$(transform-$(PRIVATE_HOST)cpp-to-o)
 -include $(proto_generated_objects:%.o=%.P)
 
-$(info "RRRRRRRRRRRRRRRRRRR")
-$(info $(PROTOC))
-$(info $(proto_generated_cc_sources))
-$(info $(proto_sources_fullpath))
-$(info $(proto_generated_objects))
-$(info "RRRRRRRRRRRRRRRRRRR2")
-
 LOCAL_C_INCLUDES += external/protobuf/src $(proto_generated_cc_sources_dir)
 LOCAL_CFLAGS += -DGOOGLE_PROTOBUF_NO_RTTI
 ifeq ($(LOCAL_PROTOC_OPTIMIZE_TYPE),full)
