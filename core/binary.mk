@@ -140,6 +140,52 @@ ALL_GENERATED_SOURCES += $(LOCAL_GENERATED_SOURCES)
 
 
 ###########################################################
+## Compile the .proto files to .cc and then to .o
+###########################################################
+proto_sources := $(filter %.proto,$(LOCAL_SRC_FILES))
+proto_generated_objects :=
+proto_generated_headers :=
+ifneq ($(proto_sources),)
+proto_sources_fullpath := $(addprefix $(LOCAL_PATH)/, $(proto_sources))
+proto_generated_cc_sources_dir := $(intermediates)/proto
+proto_generated_cc_sources := $(addprefix $(proto_generated_cc_sources_dir)/, \
+    $(patsubst %.proto,%.pb.cc,$(proto_sources_fullpath)))
+proto_generated_objects := $(patsubst %.cc,%.o, $(proto_generated_cc_sources))
+
+$(proto_generated_cc_sources): PRIVATE_PROTO_INCLUDES := $(TOP)
+$(proto_generated_cc_sources): PRIVATE_PROTO_CC_OUTPUT_DIR := $(proto_generated_cc_sources_dir)
+$(proto_generated_cc_sources): PRIVATE_PROTOC_FLAGS := $(LOCAL_PROTOC_FLAGS)
+$(proto_generated_cc_sources): $(proto_generated_cc_sources_dir)/%.pb.cc: %.proto $(PROTOC)
+	$(transform-proto-to-cc)
+
+proto_generated_headers := $(patsubst %.pb.cc,%.pb.h, $(proto_generated_cc_sources))
+$(proto_generated_headers): $(proto_generated_cc_sources_dir)/%.pb.h: $(proto_generated_cc_sources_dir)/%.pb.cc
+
+$(proto_generated_objects): PRIVATE_ARM_MODE := $(normal_objects_mode)
+$(proto_generated_objects): PRIVATE_ARM_CFLAGS := $(normal_objects_cflags)
+$(proto_generated_objects): $(proto_generated_cc_sources_dir)/%.o: $(proto_generated_cc_sources_dir)/%.cc $(proto_generated_headers)
+	$(transform-$(PRIVATE_HOST)cpp-to-o)
+-include $(proto_generated_objects:%.o=%.P)
+
+$(info "RRRRRRRRRRRRRRRRRRR")
+$(info $(PROTOC))
+$(info $(proto_generated_cc_sources))
+$(info $(proto_sources_fullpath))
+$(info $(proto_generated_objects))
+$(info "RRRRRRRRRRRRRRRRRRR2")
+
+LOCAL_C_INCLUDES += external/protobuf/src $(proto_generated_cc_sources_dir)
+LOCAL_CFLAGS += -DGOOGLE_PROTOBUF_NO_RTTI
+ifeq ($(LOCAL_PROTOC_OPTIMIZE_TYPE),full)
+LOCAL_SHARED_LIBRARIES += libprotobuf
+else
+LOCAL_SHARED_LIBRARIES += libprotobuf
+endif
+endif
+
+
+
+###########################################################
 ## YACC: Compile .y files to .cpp and the to .o.
 ###########################################################
 
@@ -346,6 +392,7 @@ all_objects := \
 	$(gen_c_objects) \
 	$(yacc_objects) \
 	$(lex_objects) \
+    $(proto_generated_objects) \
 	$(addprefix $(TOPDIR)$(LOCAL_PATH)/,$(LOCAL_PREBUILT_OBJ_FILES))
 
 LOCAL_C_INCLUDES += $(TOPDIR)$(LOCAL_PATH) $(intermediates) $(base_intermediates)
