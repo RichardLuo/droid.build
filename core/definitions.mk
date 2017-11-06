@@ -783,10 +783,10 @@ endef
 define transform-proto-to-cc
 @mkdir -p $(dir $@)
 @echo "Protoc: $@ <= $<"
-$(hide) $(PROTOC) \
+$(hide) cd $(LOCAL_PATH) && $(abspath $(TOP)/$(PROTOC)) \
 	$(addprefix --proto_path=, $(PRIVATE_PROTO_INCLUDES)) \
 	$(PRIVATE_PROTOC_FLAGS) \
-	--cpp_out=$(PRIVATE_PROTO_CC_OUTPUT_DIR) $<
+	--cpp_out=$(abspath $(PRIVATE_PROTO_CC_OUTPUT_DIR)) $(subst $(LOCAL_PATH)/,,$<)
 endef
 
 
