@@ -161,7 +161,6 @@ $(proto_generated_cc_sources): PRIVATE_PROTO_CC_OUTPUT_DIR := $(proto_generated_
 $(proto_generated_cc_sources): PRIVATE_PROTOC_FLAGS := $(LOCAL_PROTOC_FLAGS)
 $(proto_generated_cc_sources): $(proto_generated_cc_sources_dir)/%.pb.cc: $(LOCAL_PATH)/%.proto $(PROTOC)
 	$(transform-proto-to-cc)
-
 proto_generated_headers := $(patsubst %.pb.cc,%.pb.h, $(proto_generated_cc_sources))
 $(proto_generated_headers): $(proto_generated_cc_sources_dir)/%.pb.h: $(proto_generated_cc_sources_dir)/%.pb.cc
 
