@@ -49,6 +49,8 @@ endif # TARGET_PRODUCT == sdk
 # requires to use the default size, as wxWidgets code otherwise
 # fails to build.
 ifneq ($(TARGET_SIMULATOR),true)
+HOST_GLOBAL_CFLAGS += -m32
+HOST_GLOBAL_LDFLAGS += -m32
 endif
 
 ifeq ($(TARGET_SIMULATOR_WITH_BINDER),true)
