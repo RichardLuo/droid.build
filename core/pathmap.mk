@@ -28,6 +28,7 @@
 #
 pathmap_INCL := \
 	x-live:frameworks/X-Live \
+	boost:external/boost-root \
 	libjingle:external/libjingle \
     bluedroid:system/bluetooth/bluedroid/include \
     bluez:external/bluetooth/bluez \
