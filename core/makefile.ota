@@ -1,0 +1,39 @@
+ROOT_DIR=$(shell pwd)
+DIST_DIR=$(ROOT_DIR)/out/dist/x86_64
+BUILD_DIR=${ROOT_DIR}/out/host/linux-x86/pr/sim/
+
+$(info $(DIST_DIR))
+
+.PHONY: all versionfile otaimg prerequisite clean checkversion
+
+all: checkversion versionfile otaimg
+	echo $(SYSVERSION) " build ok"
+
+checkversion:
+ifndef SYSVERSION
+	$(error SYSVERSION variable is not defined)
+else
+	$(info build version: $(SYSVERSION))
+endif
+
+versionfile: prerequisite
+	echo "$(SYSVERSION) " > $(DIST_DIR)/version
+	echo "manifest version: " >> $(DIST_DIR)/version
+	cd .repo/manifests/ && git rev-parse HEAD >> $(DIST_DIR)/version && date >> $(DIST_DIR)/version &&repo manifest -r -o $(DIST_DIR)/manifest.xml
+	cp $(DIST_DIR)/version $(BUILD_DIR)/system
+	cp $(DIST_DIR)/manifest.xml $(BUILD_DIR)/system
+
+otaimg: checkversion
+	MM
+	cp -rf frameworks/X-Live/ota_scripts/META-INF frameworks/X-Live/ota_scripts/ota-image@zigbee@1228@EM357-600@v01 frameworks/X-Live/ota_scripts/firmup_ncp_5.7.2 $(DIST_DIR)
+	cd $(DIST_DIR) && rm -rf system && cp -rf ${ROOT_DIR}/out/host/linux-x86/pr/sim/system/ ./ && zip -r ${SYSVERSION}_update.zip system
+	openssl aes-256-ecb -in $(DIST_DIR)/$(SYSVERSION)_update.zip -out $(DIST_DIR)/$(SYSVERSION)_update.bin -k rbyGh54jJQhv
+	sha1sum $(DIST_DIR)/$(SYSVERSION)_update.zip
+	sha1sum $(DIST_DIR)/$(SYSVERSION)_update.bin
+
+prerequisite:
+	mkdir -p $(DIST_DIR)
+	mkdir -p $(BUILD_DIR)/system
+
+clean:
+	rm -rf out
