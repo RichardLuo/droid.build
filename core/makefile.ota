@@ -25,8 +25,8 @@ versionfile: prerequisite
 
 otaimg: checkversion
 	MM
-	cp -rf frameworks/X-Live/ota_scripts/META-INF frameworks/X-Live/ota_scripts/ota-image@zigbee@1228@EM357-600@v01 frameworks/X-Live/ota_scripts/firmup_ncp_5.7.2 $(DIST_DIR)
-	cd $(DIST_DIR) && rm -rf system && cp -rf ${ROOT_DIR}/out/host/linux-x86/pr/sim/system/ ./ && zip -r ${SYSVERSION}_update.zip system
+	cp -rf frameworks/X-Live/ota_scripts/upgrade_x86.sh frameworks/X-Live/ota_scripts/META-INF frameworks/X-Live/ota_scripts/ota-image@zigbee@1228@EM357-600@v01 frameworks/X-Live/ota_scripts/firmup_ncp_5.7.2 $(DIST_DIR)
+	cd $(DIST_DIR) && rm -rf system && cp -rf ${ROOT_DIR}/out/host/linux-x86/pr/sim/system/ ./ && zip -r ${SYSVERSION}_update.zip upgrade_x86.sh system
 	openssl aes-256-ecb -in $(DIST_DIR)/$(SYSVERSION)_update.zip -out $(DIST_DIR)/$(SYSVERSION)_update.bin -k rbyGh54jJQhv
 	sha1sum $(DIST_DIR)/$(SYSVERSION)_update.zip
 	sha1sum $(DIST_DIR)/$(SYSVERSION)_update.bin
